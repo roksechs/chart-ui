@@ -10,14 +10,15 @@
 <script lang="ts">
 	import { Task } from './Task.js';
 	import dayjs from 'dayjs';
-	import { pageRange } from './store.js';
+	import { pageRange, shiftPageRange } from './store.js';
 	import Bar from './Bar.svelte';
+	import DayjsRange from './DayjsRange.js';
 
 	export let taskDTOs: TaskDTO[] = [];
 	$: tasks = taskDTOs.map(convertDTOToTask);
 
 	function convertDTOToTask(dto: TaskDTO): Task {
-		return new Task(dto.id, dto.name, dayjs(dto.start), dayjs(dto.end));
+		return new Task(dto.id, dto.name, new DayjsRange(dayjs(dto.start), dayjs(dto.end)));
 	}
 
 	let body: HTMLDivElement;
@@ -46,12 +47,9 @@
 		return dates;
 	}
 
-	function calculateWidth(task: Task): number {
-		return task.diff('day') * dayScaleFactor;
-	}
-
-	function calculateLeftOffset(task: Task): number {
-		return task.start.diff($pageRange.start, 'day') * dayScaleFactor;
+	function handleWheel(event: WheelEvent) {
+		const amount = event.deltaY > 0 ? 1 : -1;
+		shiftPageRange(amount, 'day');
 	}
 </script>
 
@@ -63,14 +61,19 @@
 		{/each}
 	</div>
 
-	{#each tasks as task}
-		<div class="relative h-10 border-b border-gray-300">
-			<div class="header-cell border-r border-gray-300">
-				{task.name}
+	<div onwheel={handleWheel} class="scroll-container">
+		{#each tasks as task}
+			<div class="relative h-10 border-b border-gray-300">
+				<div class="header-cell border-r border-gray-300">
+					{task.name}
+				</div>
+				<Bar
+					offset={task.start.diff($pageRange.start, 'day') * dayScaleFactor}
+					width={task.getRange('day') * dayScaleFactor}
+				/>
 			</div>
-			<Bar offset={calculateLeftOffset(task)} width={calculateWidth(task)} />
-		</div>
-	{/each}
+		{/each}
+	</div>
 </div>
 
 <style lang="postcss">

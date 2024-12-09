@@ -1,12 +1,12 @@
 import type dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+import DayjsRange from './DayjsRange.js';
 
 export class Task {
 	constructor(
 		private _id: number,
 		private _name: string,
-		private _start: Dayjs,
-		private _end: Dayjs
+		private _range: DayjsRange
 	) {}
 
 	get id(): number {
@@ -18,14 +18,14 @@ export class Task {
 	}
 
 	get start(): Dayjs {
-		return this._start;
+		return this._range.start;
 	}
 
 	get end(): Dayjs {
-		return this._end;
+		return this._range.end;
 	}
 
-	diff(unit: dayjs.UnitType = 'millisecond'): number {
-		return this._end.endOf('date').diff(this._start, unit);
+	getRange(unit: dayjs.UnitType = 'millisecond'): number {
+		return this._range.diff(unit);
 	}
 }
